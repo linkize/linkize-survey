@@ -137,8 +137,8 @@ const isSubmitting = ref(false)
 const submitted = ref(false)
 const errorMessage = ref('')
 
-// Initialize answers object
-onMounted(() => {
+// Helper function to initialize answers
+const initializeAnswers = () => {
   questions.forEach(q => {
     if (q.type === 'checkbox') {
       answers.value[q.id] = []
@@ -146,6 +146,11 @@ onMounted(() => {
       answers.value[q.id] = ''
     }
   })
+}
+
+// Initialize answers on mount
+onMounted(() => {
+  initializeAnswers()
 })
 
 // Handle form submission
@@ -202,13 +207,7 @@ const handleSubmit = async () => {
 
 // Reset form
 const resetForm = () => {
-  questions.forEach(q => {
-    if (q.type === 'checkbox') {
-      answers.value[q.id] = []
-    } else {
-      answers.value[q.id] = ''
-    }
-  })
+  initializeAnswers()
   submitted.value = false
   errorMessage.value = ''
 }
