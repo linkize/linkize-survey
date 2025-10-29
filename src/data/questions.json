@@ -1,0 +1,59 @@
+[
+  {
+    "id": 1,
+    "question": "What is your primary use case for a link management tool?",
+    "type": "radio",
+    "options": [
+      "Personal link organization",
+      "Business/Marketing campaigns",
+      "Social media management",
+      "Team collaboration",
+      "Other"
+    ]
+  },
+  {
+    "id": 2,
+    "question": "How many links do you typically manage per month?",
+    "type": "radio",
+    "options": [
+      "Less than 10",
+      "10-50",
+      "50-100",
+      "100-500",
+      "More than 500"
+    ]
+  },
+  {
+    "id": 3,
+    "question": "Which features are most important to you? (Select all that apply)",
+    "type": "checkbox",
+    "options": [
+      "Link shortening",
+      "Custom branded links",
+      "Analytics and tracking",
+      "QR code generation",
+      "Link expiration",
+      "Password protection",
+      "Team collaboration tools"
+    ]
+  },
+  {
+    "id": 4,
+    "question": "What is your role?",
+    "type": "radio",
+    "options": [
+      "Individual/Personal user",
+      "Marketing professional",
+      "Developer",
+      "Business owner",
+      "Social media manager",
+      "Other"
+    ]
+  },
+  {
+    "id": 5,
+    "question": "Any additional feedback or feature requests?",
+    "type": "text",
+    "placeholder": "Share your thoughts..."
+  }
+]
