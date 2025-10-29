@@ -1,59 +1,23 @@
 [
-  {
-    "id": 1,
-    "question": "What is your primary use case for a link management tool?",
-    "type": "radio",
-    "options": [
-      "Personal link organization",
-      "Business/Marketing campaigns",
-      "Social media management",
-      "Team collaboration",
-      "Other"
-    ]
-  },
-  {
-    "id": 2,
-    "question": "How many links do you typically manage per month?",
-    "type": "radio",
-    "options": [
-      "Less than 10",
-      "10-50",
-      "50-100",
-      "100-500",
-      "More than 500"
-    ]
-  },
-  {
-    "id": 3,
-    "question": "Which features are most important to you? (Select all that apply)",
-    "type": "checkbox",
-    "options": [
-      "Link shortening",
-      "Custom branded links",
-      "Analytics and tracking",
-      "QR code generation",
-      "Link expiration",
-      "Password protection",
-      "Team collaboration tools"
-    ]
-  },
-  {
-    "id": 4,
-    "question": "What is your role?",
-    "type": "radio",
-    "options": [
-      "Individual/Personal user",
-      "Marketing professional",
-      "Developer",
-      "Business owner",
-      "Social media manager",
-      "Other"
-    ]
-  },
-  {
-    "id": 5,
-    "question": "Any additional feedback or feature requests?",
-    "type": "text",
-    "placeholder": "Share your thoughts..."
-  }
+  {"id":1,"section":"Sobre o negócio","type":"text","label":"Qual é o nome do seu negócio ou atividade principal?","placeholder":"Ex.: roupas, marmitas, estética..."},
+  {"id":2,"type":"select","label":"Você trabalha com produtos, serviços ou ambos?","options":["Produtos","Serviços","Ambos"]},
+  {"id":3,"type":"checkbox","label":"Por quais canais realiza suas vendas atualmente?","options":["WhatsApp","Instagram","Loja física ou feira","Site próprio","Marketplaces (Shopee, OLX, etc.)"]},
+  {"id":4,"type":"select","label":"Quantas pessoas atuam com você no negócio?","options":["Apenas eu","De 2 a 5 pessoas","Mais de 5 pessoas"]},
+  {"id":5,"type":"select","label":"Como você se avalia em relação ao uso de tecnologia?","options":["Tenho pouca familiaridade","Consigo me virar bem","Tenho facilidade e gosto de aprender","Tenho bastante experiência"]},
+  {"id":6,"section":"Rotina e desafios","type":"textarea","label":"Como apresenta seus produtos ou serviços aos clientes?"},
+  {"id":7,"type":"textarea","label":"Quais são as maiores dificuldades que enfrenta ao divulgar o que vende?"},
+  {"id":8,"type":"select","label":"Com que frequência atualiza preços, fotos ou informações?","options":["Com frequência","Às vezes","Raramente"]},
+  {"id":9,"type":"select","label":"Já deixou de concretizar uma venda por falta de tempo ou dificuldade?","options":["Sim","Não","Não tenho certeza"]},
+  {"id":10,"type":"textarea","label":"O que gostaria que fosse mais simples no seu dia a dia de vendas?"},
+  {"id":11,"section":"WhatsApp","type":"select","label":"Você utiliza o WhatsApp Business?","options":["Sim","Não","Não sei a diferença"]},
+  {"id":12,"type":"textarea","label":"Como o WhatsApp faz parte do seu processo de vendas?"},
+  {"id":13,"type":"select","label":"Você já utilizou o catálogo do WhatsApp Business?","options":["Sim, uso com frequência","Já tentei usar, mas desisti","Nunca utilizei"]},
+  {"id":14,"type":"textarea","label":"Por que o catálogo do WhatsApp não é suficiente para o seu negócio?"},
+  {"id":15,"section":"Ideia da Linkize","type":"select","label":"Você teria interesse em utilizar uma ferramenta assim?","options":["Sim","Talvez","Não"]},
+  {"id":16,"type":"checkbox","label":"Quais características chamariam mais sua atenção?","options":["Facilidade de uso","Visual bonito e profissional","Atualização automática de produtos","Relatórios e métricas","Atendimento automatizado (chat com IA)"]},
+  {"id":17,"type":"select","label":"Qual valor mensal considera justo?","options":["Prefiro gratuita","Até R$15","Até R$30","Até R$50","Mais de R$50 se valer a pena"]},
+  {"id":18,"type":"select","label":"Interesse em testar uma versão gratuita inicial?","options":["Sim","Talvez","Não"]},
+  {"id":19,"type":"textarea","label":"O que faria você recomendar essa ferramenta a outras pessoas?"},
+  {"id":20,"section":"Contato","type":"select","label":"Deseja ser avisado(a) quando a versão de testes estiver disponível?","options":["Sim, quero participar","Não"]},
+  {"id":21,"type":"text","label":"Deixe seu WhatsApp ou e-mail (opcional)"}
 ]
