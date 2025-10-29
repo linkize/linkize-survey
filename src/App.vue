@@ -82,11 +82,29 @@
             </div>
           </div>
 
+          <!-- LGPD Consent -->
+          <div class="pt-6 border-t border-gray-200">
+            <div class="flex items-start space-x-3">
+              <input
+                id="lgpd-consent"
+                type="checkbox"
+                v-model="lgpdConsent"
+                class="mt-1 h-4 w-4 text-linkize-blue focus:ring-linkize-blue border-gray-300 rounded"
+                required
+              />
+              <label for="lgpd-consent" class="text-sm text-gray-600">
+                Concordo com o tratamento dos meus dados pessoais conforme a 
+                <a href="#" class="text-linkize-blue hover:underline">Política de Privacidade</a>
+                e autorizo o recebimento de comunicações da Linkize sobre o produto e testes beta.
+              </label>
+            </div>
+          </div>
+
           <!-- Submit Button -->
           <div class="pt-6">
             <button
               type="submit"
-              :disabled="isSubmitting"
+              :disabled="isSubmitting || !lgpdConsent"
               class="w-full bg-gradient-to-r from-linkize-blue to-linkize-green text-white py-3 px-6 rounded-lg font-semibold text-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {{ isSubmitting ? 'Enviando...' : 'Enviar Pesquisa' }}
@@ -136,6 +154,31 @@ import { ref, onMounted } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import questions from './data/questions.json'
 
+// Mapeamento dinâmico das perguntas para colunas da tabela
+const questionMapping = {
+  1: 'nome_negocio',
+  2: 'tipo_atividade', 
+  3: 'canais_venda',
+  4: 'qtd_pessoas',
+  5: 'nivel_tecnologia',
+  6: 'forma_apresentacao',
+  7: 'principais_dificuldades',
+  8: 'frequencia_atualizacao',
+  9: 'perdeu_venda',
+  10: 'desejo_facilidade',
+  11: 'usa_whatsapp_business',
+  12: 'uso_whatsapp',
+  13: 'usou_catalogo_whatsapp',
+  14: 'motivo_catalogo_insuficiente',
+  15: 'interesse_linkize',
+  16: 'caracteristicas_preferidas',
+  17: 'valor_justo',
+  18: 'interesse_teste_gratuito',
+  19: 'motivo_recomendacao',
+  20: 'quer_ser_avisado',
+  21: 'contato'
+}
+
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
@@ -153,6 +196,7 @@ if (supabaseUrl && supabaseAnonKey) {
 
 // Component state
 const answers = ref({})
+const lgpdConsent = ref(false)
 const isSubmitting = ref(false)
 const submitted = ref(false)
 const errorMessage = ref('')
@@ -193,43 +237,18 @@ const handleSubmit = async () => {
       return
     }
 
+    // Mapear as respostas dinamicamente usando o questionMapping
+    const surveyData = {}
+    Object.keys(answers.value).forEach(questionId => {
+      const columnName = questionMapping[questionId]
+      if (columnName && answers.value[questionId]) {
+        surveyData[columnName] = answers.value[questionId]
+      }
+    })
+
     // Save to Supabase if configured
     if (supabase) {
-      console.log('Enviando dados para Supabase:', answers.value)
-      
-      // Mapear as respostas para as colunas corretas da tabela
-      const surveyData = {
-        // 👤 1. Sobre o negócio
-        nome_negocio: answers.value[1] || null,
-        tipo_atividade: answers.value[2] || null,
-        canais_venda: Array.isArray(answers.value[3]) ? answers.value[3] : null,
-        qtd_pessoas: answers.value[4] || null,
-        nivel_tecnologia: answers.value[5] || null,
-        
-        // 💬 2. Rotina e desafios
-        forma_apresentacao: answers.value[6] || null,
-        principais_dificuldades: answers.value[7] || null,
-        frequencia_atualizacao: answers.value[8] || null,
-        perdeu_venda: answers.value[9] || null,
-        desejo_facilidade: answers.value[10] || null,
-        
-        // 📱 3. Uso do WhatsApp
-        usa_whatsapp_business: answers.value[11] || null,
-        uso_whatsapp: answers.value[12] || null,
-        usou_catalogo_whatsapp: answers.value[13] || null,
-        motivo_catalogo_insuficiente: answers.value[14] || null,
-        
-        // 💡 4. Ideia da Linkize
-        interesse_linkize: answers.value[15] || null,
-        caracteristicas_preferidas: Array.isArray(answers.value[16]) ? answers.value[16] : null,
-        valor_justo: answers.value[17] || null,
-        interesse_teste_gratuito: answers.value[18] || null,
-        motivo_recomendacao: answers.value[19] || null,
-        
-        // 📞 5. Contato
-        quer_ser_avisado: answers.value[20] || null,
-        contato: answers.value[21] || null
-      }
+      console.log('Enviando dados para Supabase:', surveyData)
       
       const { data, error } = await supabase
         .from('survey_responses')
@@ -244,6 +263,11 @@ const handleSubmit = async () => {
       }
       
       console.log('Dados salvos com sucesso:', data)
+      
+      // Enviar WhatsApp e Email se o usuário quer ser avisado
+      if (surveyData.quer_ser_avisado === "Sim, quero participar" && surveyData.contato) {
+        await sendNotifications(surveyData)
+      }
     } else {
       console.error('Supabase não configurado - URL ou Key faltando')
       errorMessage.value = 'Configuração do banco de dados não encontrada.'
@@ -261,9 +285,58 @@ const handleSubmit = async () => {
   }
 }
 
+// Helper function to detect if contact is email or phone
+const detectContactType = (contact) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const phoneRegex = /^[\+]?[1-9][\d]{3,14}$/
+  
+  if (emailRegex.test(contact)) return 'email'
+  if (phoneRegex.test(contact.replace(/\D/g, ''))) return 'phone'
+  return 'unknown'
+}
+
+// Send notifications via Netlify Functions
+const sendNotifications = async (surveyData) => {
+  const contactType = detectContactType(surveyData.contato)
+  
+  try {
+    // Send WhatsApp if phone number
+    if (contactType === 'phone') {
+      console.log('Enviando WhatsApp para:', surveyData.contato)
+      await fetch('/.netlify/functions/send-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: surveyData.contato,
+          name: surveyData.nome_negocio || 'Empreendedor',
+          surveyData
+        })
+      })
+    }
+    
+    // Send Email if email address
+    if (contactType === 'email') {
+      console.log('Enviando email para:', surveyData.contato)
+      await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: surveyData.contato,
+          name: surveyData.nome_negocio || 'Empreendedor',
+          surveyData
+        })
+      })
+    }
+  } catch (error) {
+    console.error('Erro ao enviar notificações:', error)
+    // Não bloquear o fluxo principal se as notificações falharem
+  }
+}
+
 // Reset form
 const resetForm = () => {
   initializeAnswers()
+  lgpdConsent.value = false
   submitted.value = false
   errorMessage.value = ''
 }
