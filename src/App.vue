@@ -301,7 +301,7 @@ const sendNotifications = async (surveyData) => {
   
   try {
     // Send WhatsApp if phone number
-    if (contactType === 'phone') {
+    /* if (contactType === 'phone') {
       console.log('Enviando WhatsApp para:', surveyData.contato)
       await fetch('/.netlify/functions/send-whatsapp', {
         method: 'POST',
@@ -312,7 +312,7 @@ const sendNotifications = async (surveyData) => {
           surveyData
         })
       })
-    }
+    } */
     
     // Send Email if email address
     if (contactType === 'email') {
