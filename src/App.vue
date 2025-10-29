@@ -4,10 +4,10 @@
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-white mb-4">
-          Linkize Survey
+          Pesquisa Linkize
         </h1>
         <p class="text-xl text-white/90">
-          Help us understand your link management needs
+          Ajude-nos a entender suas necessidades de negócio
         </p>
       </div>
 
@@ -16,15 +16,20 @@
         <form v-if="!submitted" @submit.prevent="handleSubmit" class="space-y-8">
           <!-- Dynamic Questions -->
           <div v-for="question in questions" :key="question.id" class="space-y-3">
+            <!-- Section Header -->
+            <div v-if="question.section && (!questions[questions.indexOf(question) - 1] || questions[questions.indexOf(question) - 1].section !== question.section)" class="pt-6 pb-2 border-b border-gray-200">
+              <h3 class="text-xl font-semibold text-gray-800">{{ question.section }}</h3>
+            </div>
+
             <label class="block text-lg font-medium text-gray-900">
-              {{ question.question }}
+              {{ question.label }}
               <span v-if="question.type === 'checkbox'" class="text-sm text-gray-500 font-normal ml-2">
-                (Select all that apply)
+                (Selecione todas as opções que se aplicam)
               </span>
             </label>
 
-            <!-- Radio Question -->
-            <div v-if="question.type === 'radio'" class="space-y-2">
+            <!-- Select Question -->
+            <div v-if="question.type === 'select'" class="space-y-2">
               <div v-for="(option, index) in question.options" :key="index" class="flex items-center">
                 <input
                   :id="`q${question.id}-opt${index}`"
@@ -33,7 +38,6 @@
                   :value="option"
                   v-model="answers[question.id]"
                   class="h-4 w-4 text-linkize-blue focus:ring-linkize-blue border-gray-300"
-                  required
                 />
                 <label :for="`q${question.id}-opt${index}`" class="ml-3 text-gray-700">
                   {{ option }}
@@ -59,9 +63,19 @@
 
             <!-- Text Question -->
             <div v-else-if="question.type === 'text'">
-              <textarea
+              <input
                 v-model="answers[question.id]"
                 :placeholder="question.placeholder || ''"
+                type="text"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-linkize-blue focus:border-transparent"
+              />
+            </div>
+
+            <!-- Textarea Question -->
+            <div v-else-if="question.type === 'textarea'">
+              <textarea
+                v-model="answers[question.id]"
+                :placeholder="question.placeholder || 'Digite sua resposta aqui...'"
                 rows="4"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-linkize-blue focus:border-transparent resize-none"
               ></textarea>
@@ -75,7 +89,7 @@
               :disabled="isSubmitting"
               class="w-full bg-gradient-to-r from-linkize-blue to-linkize-green text-white py-3 px-6 rounded-lg font-semibold text-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {{ isSubmitting ? 'Submitting...' : 'Submit Survey' }}
+              {{ isSubmitting ? 'Enviando...' : 'Enviar Pesquisa' }}
             </button>
           </div>
 
@@ -95,16 +109,16 @@
             </svg>
           </div>
           <h2 class="text-2xl font-bold text-gray-900 mb-2">
-            Thank you for your feedback!
+            Obrigado pelo seu feedback!
           </h2>
           <p class="text-gray-600 mb-6">
-            Your response has been recorded successfully.
+            Sua resposta foi registrada com sucesso.
           </p>
           <button
             @click="resetForm"
             class="bg-gradient-to-r from-linkize-blue to-linkize-green text-white py-2 px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
           >
-            Submit Another Response
+            Enviar Outra Resposta
           </button>
         </div>
       </div>
@@ -126,9 +140,15 @@ import questions from './data/questions.json'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Key disponível:', !!supabaseAnonKey)
+
 let supabase = null
 if (supabaseUrl && supabaseAnonKey) {
   supabase = createClient(supabaseUrl, supabaseAnonKey)
+  console.log('Cliente Supabase inicializado com sucesso')
+} else {
+  console.error('Credenciais do Supabase não encontradas')
 }
 
 // Component state
@@ -168,38 +188,74 @@ const handleSubmit = async () => {
     })
 
     if (!hasAnswers) {
-      errorMessage.value = 'Please answer at least one question before submitting.'
+      errorMessage.value = 'Por favor, responda pelo menos uma pergunta antes de enviar.'
       isSubmitting.value = false
       return
     }
 
     // Save to Supabase if configured
     if (supabase) {
-      const { error } = await supabase
+      console.log('Enviando dados para Supabase:', answers.value)
+      
+      // Mapear as respostas para as colunas corretas da tabela
+      const surveyData = {
+        // 👤 1. Sobre o negócio
+        nome_negocio: answers.value[1] || null,
+        tipo_atividade: answers.value[2] || null,
+        canais_venda: Array.isArray(answers.value[3]) ? answers.value[3] : null,
+        qtd_pessoas: answers.value[4] || null,
+        nivel_tecnologia: answers.value[5] || null,
+        
+        // 💬 2. Rotina e desafios
+        forma_apresentacao: answers.value[6] || null,
+        principais_dificuldades: answers.value[7] || null,
+        frequencia_atualizacao: answers.value[8] || null,
+        perdeu_venda: answers.value[9] || null,
+        desejo_facilidade: answers.value[10] || null,
+        
+        // 📱 3. Uso do WhatsApp
+        usa_whatsapp_business: answers.value[11] || null,
+        uso_whatsapp: answers.value[12] || null,
+        usou_catalogo_whatsapp: answers.value[13] || null,
+        motivo_catalogo_insuficiente: answers.value[14] || null,
+        
+        // 💡 4. Ideia da Linkize
+        interesse_linkize: answers.value[15] || null,
+        caracteristicas_preferidas: Array.isArray(answers.value[16]) ? answers.value[16] : null,
+        valor_justo: answers.value[17] || null,
+        interesse_teste_gratuito: answers.value[18] || null,
+        motivo_recomendacao: answers.value[19] || null,
+        
+        // 📞 5. Contato
+        quer_ser_avisado: answers.value[20] || null,
+        contato: answers.value[21] || null
+      }
+      
+      const { data, error } = await supabase
         .from('survey_responses')
-        .insert([
-          {
-            responses: answers.value,
-            submitted_at: new Date().toISOString()
-          }
-        ])
+        .insert([surveyData])
+        .select()
 
       if (error) {
-        console.error('Supabase error:', error)
-        errorMessage.value = 'Failed to submit survey. Please try again.'
+        console.error('Erro do Supabase:', error)
+        errorMessage.value = `Falha ao enviar a pesquisa: ${error.message}`
         isSubmitting.value = false
         return
       }
+      
+      console.log('Dados salvos com sucesso:', data)
     } else {
-      // If Supabase is not configured, just log to console
-      console.log('Survey responses (Supabase not configured):', answers.value)
+      console.error('Supabase não configurado - URL ou Key faltando')
+      errorMessage.value = 'Configuração do banco de dados não encontrada.'
+      isSubmitting.value = false
+      return
     }
 
     // Show success state
     submitted.value = true
   } catch (error) {
     console.error('Error submitting survey:', error)
-    errorMessage.value = 'An unexpected error occurred. Please try again.'
+    errorMessage.value = 'Ocorreu um erro inesperado. Tente novamente.'
   } finally {
     isSubmitting.value = false
   }
