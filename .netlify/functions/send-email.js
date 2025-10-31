@@ -26,11 +26,11 @@ exports.handler = async (event, context) => {
     const { email, name, surveyData } = JSON.parse(event.body)
 
     // Validate required environment variables
-    const smtpHost = process.env.SMTP_HOST
-    const smtpPort = process.env.SMTP_PORT
-    const smtpUser = process.env.SMTP_USER
-    const smtpPass = process.env.SMTP_PASS
-    const fromEmail = process.env.FROM_EMAIL
+    const smtpHost = process.env.MAIL_HOST
+    const smtpPort = process.env.MAIL_PORT
+    const smtpUser = process.env.MAIL_USER
+    const smtpPass = process.env.MAIL_PASS
+    const fromEmail = process.env.MAIL_FROM
 
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !fromEmail) {
       console.error('Missing SMTP environment variables')
@@ -45,7 +45,7 @@ exports.handler = async (event, context) => {
     const transporter = nodemailer.createTransporter({
       host: smtpHost,
       port: parseInt(smtpPort),
-      secure: smtpPort === '465',
+      secure: smtpPort === '2525',
       auth: {
         user: smtpUser,
         pass: smtpPass
