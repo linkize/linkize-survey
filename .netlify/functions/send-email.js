@@ -25,17 +25,47 @@ export async function handler(event, context) {
   try {
     const { email, name, surveyData } = JSON.parse(event.body)
 
+    console.log('Processing email request for:', email)
+
     // Validate required environment variables
     const mailerSendApiKey = process.env.MAILERSEND_API_KEY
-    const fromEmail = process.env.MAIL_FROM || "noreply@linkize.com.br"
+    const fromEmail = process.env.MAIL_FROM
     const fromName = process.env.MAIL_FROM_NAME || "Linkize"
+
+    console.log('Environment check:', {
+      hasApiKey: !!mailerSendApiKey,
+      fromEmail: fromEmail,
+      fromName: fromName
+    })
 
     if (!mailerSendApiKey) {
       console.error('Missing MailerSend API key')
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Service configuration error' })
+        body: JSON.stringify({ error: 'MailerSend API key not configured' })
+      }
+    }
+
+    if (!fromEmail) {
+      console.error('Missing MAIL_FROM environment variable')
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'MAIL_FROM not configured' })
+      }
+    }
+
+    // Validate email domain (MailerSend requires verified domains)
+    if (fromEmail.includes('@gmail.com') || fromEmail.includes('@hotmail.com') || fromEmail.includes('@yahoo.com')) {
+      console.error('MailerSend requires a verified domain. Free email providers are not allowed:', fromEmail)
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid sender domain',
+          details: 'MailerSend requires a verified domain. Please use your own domain instead of free email providers.' 
+        })
       }
     }
 
@@ -129,6 +159,7 @@ export async function handler(event, context) {
       .setText(textContent)
 
     // Send email
+    console.log('Attempting to send email via MailerSend...')
     const response = await mailerSend.email.send(emailParams)
 
     console.log(`Email sent successfully to ${email}`, response)
@@ -139,19 +170,38 @@ export async function handler(event, context) {
       body: JSON.stringify({ 
         success: true, 
         message: 'Email sent successfully',
-        messageId: response.messageId
+        messageId: response?.messageId || 'unknown'
       })
     }
 
   } catch (error) {
-    console.error('Error sending email:', error)
+    console.error('Error sending email:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data || error.response
+    })
+    
+    // More specific error handling for MailerSend
+    let errorMessage = 'Failed to send email'
+    let errorDetails = error.message
+    
+    if (error.response?.data?.message) {
+      errorDetails = error.response.data.message
+    } else if (error.message?.includes('domain')) {
+      errorMessage = 'Domain verification required'
+      errorDetails = 'The sender domain must be verified in MailerSend. Please verify your domain or use a different sender address.'
+    } else if (error.message?.includes('API key')) {
+      errorMessage = 'Invalid API key'
+      errorDetails = 'The MailerSend API key is invalid or missing permissions.'
+    }
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
-        error: 'Failed to send email',
-        details: error.message 
+        error: errorMessage,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
       })
     }
   }
