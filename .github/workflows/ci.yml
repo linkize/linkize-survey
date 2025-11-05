@@ -55,7 +55,7 @@ jobs:
       run: npm run build
     
     - name: Deploy to Netlify
-      uses: netlify/actions/deploy@master
+      uses: nwtgck/actions-netlify@v3.0
       with:
         publish-dir: './dist'
         production-branch: main
