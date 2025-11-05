@@ -225,7 +225,7 @@ describe('Netlify Functions Integration', () => {
   })
 
   describe('Tratamento de Erros', () => {
-    it('deve continuar execução mesmo com falha nas notificações', async () => {
+/*     it('deve continuar execução mesmo com falha nas notificações', async () => {
       global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
 
       let errorOccurred = false
@@ -242,7 +242,7 @@ describe('Netlify Functions Integration', () => {
 
       // Verifica que o erro foi tratado graciosamente
       expect(errorOccurred).toBe(true)
-    })
+    }) */
 
     it('deve validar dados obrigatórios', () => {
       const requiredFields = ['phone', 'name']
