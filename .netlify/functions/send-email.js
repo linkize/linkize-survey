@@ -1,6 +1,4 @@
-import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
-
-export async function handler(event, context) {
+exports.handler = async function(event, context) {
   // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -28,22 +26,22 @@ export async function handler(event, context) {
     console.log('Processing email request for:', email)
 
     // Validate required environment variables
-    const mailerSendApiKey = process.env.MAILERSEND_API_KEY
+    const brevoApiKey = process.env.BREVO_API_KEY
     const fromEmail = process.env.MAIL_FROM
     const fromName = process.env.MAIL_FROM_NAME || "Linkize"
 
     console.log('Environment check:', {
-      hasApiKey: !!mailerSendApiKey,
+      hasApiKey: !!brevoApiKey,
       fromEmail: fromEmail,
       fromName: fromName
     })
 
-    if (!mailerSendApiKey) {
-      console.error('Missing MailerSend API key')
+    if (!brevoApiKey) {
+      console.error('Missing Brevo API key')
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'MailerSend API key not configured' })
+        body: JSON.stringify({ error: 'Brevo API key not configured' })
       }
     }
 
@@ -55,24 +53,6 @@ export async function handler(event, context) {
         body: JSON.stringify({ error: 'MAIL_FROM not configured' })
       }
     }
-
-    // Validate email domain (MailerSend requires verified domains)
-    if (fromEmail.includes('@gmail.com') || fromEmail.includes('@hotmail.com') || fromEmail.includes('@yahoo.com')) {
-      console.error('MailerSend requires a verified domain. Free email providers are not allowed:', fromEmail)
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Invalid sender domain',
-          details: 'MailerSend requires a verified domain. Please use your own domain instead of free email providers.' 
-        })
-      }
-    }
-
-    // Initialize MailerSend
-    const mailerSend = new MailerSend({
-      apiKey: mailerSendApiKey,
-    })
 
     // Create email content
     const htmlContent = `
@@ -145,24 +125,34 @@ export async function handler(event, context) {
     Equipe Linkize 💙
     `
 
-    // Configure sender and recipient
-    const sentFrom = new Sender(fromEmail, fromName)
-    const recipients = [new Recipient(email, name)]
+    // Create email data for Brevo API
+    const emailData = {
+      sender: { name: fromName, email: fromEmail },
+      to: [{ email: email, name: name }],
+      replyTo: { name: fromName, email: fromEmail },
+      subject: '🎉 Obrigado por participar da pesquisa Linkize!',
+      htmlContent: htmlContent,
+      textContent: textContent
+    }
 
-    // Create email parameters
-    const emailParams = new EmailParams()
-      .setFrom(sentFrom)
-      .setTo(recipients)
-      .setReplyTo(sentFrom)
-      .setSubject('🎉 Obrigado por participar da pesquisa Linkize!')
-      .setHtml(htmlContent)
-      .setText(textContent)
+    // Send email via Brevo API
+    console.log('Attempting to send email via Brevo API...')
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': brevoApiKey
+      },
+      body: JSON.stringify(emailData)
+    })
 
-    // Send email
-    console.log('Attempting to send email via MailerSend...')
-    const response = await mailerSend.email.send(emailParams)
+    const responseData = await response.json()
 
-    console.log(`Email sent successfully to ${email}`, response)
+    if (!response.ok) {
+      throw new Error(`Brevo API Error: ${response.status} - ${JSON.stringify(responseData)}`)
+    }
+
+    console.log(`Email sent successfully to ${email}`, responseData)
 
     return {
       statusCode: 200,
@@ -170,7 +160,7 @@ export async function handler(event, context) {
       body: JSON.stringify({ 
         success: true, 
         message: 'Email sent successfully',
-        messageId: response?.messageId || 'unknown'
+        messageId: responseData?.messageId || 'unknown'
       })
     }
 
@@ -181,18 +171,19 @@ export async function handler(event, context) {
       response: error.response?.data || error.response
     })
     
-    // More specific error handling for MailerSend
+    // More specific error handling for Brevo
     let errorMessage = 'Failed to send email'
     let errorDetails = error.message
     
-    if (error.response?.data?.message) {
-      errorDetails = error.response.data.message
-    } else if (error.message?.includes('domain')) {
-      errorMessage = 'Domain verification required'
-      errorDetails = 'The sender domain must be verified in MailerSend. Please verify your domain or use a different sender address.'
-    } else if (error.message?.includes('API key')) {
+    if (error.message?.includes('401')) {
       errorMessage = 'Invalid API key'
-      errorDetails = 'The MailerSend API key is invalid or missing permissions.'
+      errorDetails = 'The Brevo API key is invalid or missing permissions.'
+    } else if (error.message?.includes('400')) {
+      errorMessage = 'Bad request'
+      errorDetails = 'Check email format and sender configuration.'
+    } else if (error.message?.includes('Brevo API Error')) {
+      errorMessage = 'Brevo API Error'
+      errorDetails = error.message
     }
     
     return {
