@@ -1,6 +1,6 @@
-const nodemailer = require('nodemailer')
+import { createTransport } from 'nodemailer'
 
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
   // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -42,10 +42,9 @@ exports.handler = async (event, context) => {
     }
 
     // Create transporter
-    const transporter = nodemailer.createTransporter({
+    const transporter = createTransport({
       host: smtpHost,
       port: parseInt(smtpPort),
-      secure: smtpPort === '2525',
       auth: {
         user: smtpUser,
         pass: smtpPass
