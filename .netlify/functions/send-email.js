@@ -1,4 +1,4 @@
-import { createTransport } from 'nodemailer'
+import { MailerSend, EmailParams, Sender, Recipient } from "mailersend"
 
 export async function handler(event, context) {
   // CORS headers
@@ -26,14 +26,12 @@ export async function handler(event, context) {
     const { email, name, surveyData } = JSON.parse(event.body)
 
     // Validate required environment variables
-    const smtpHost = process.env.MAIL_HOST
-    const smtpPort = process.env.MAIL_PORT
-    const smtpUser = process.env.MAIL_USER
-    const smtpPass = process.env.MAIL_PASS
-    const fromEmail = process.env.MAIL_FROM
+    const mailerSendApiKey = process.env.MAILERSEND_API_KEY
+    const fromEmail = process.env.MAIL_FROM || "noreply@linkize.com.br"
+    const fromName = process.env.MAIL_FROM_NAME || "Linkize"
 
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !fromEmail) {
-      console.error('Missing SMTP environment variables')
+    if (!mailerSendApiKey) {
+      console.error('Missing MailerSend API key')
       return {
         statusCode: 500,
         headers,
@@ -41,14 +39,9 @@ export async function handler(event, context) {
       }
     }
 
-    // Create transporter
-    const transporter = createTransport({
-      host: smtpHost,
-      port: parseInt(smtpPort),
-      auth: {
-        user: smtpUser,
-        pass: smtpPass
-      }
+    // Initialize MailerSend
+    const mailerSend = new MailerSend({
+      apiKey: mailerSendApiKey,
     })
 
     // Create email content
@@ -122,23 +115,31 @@ export async function handler(event, context) {
     Equipe Linkize 💙
     `
 
-    // Send email
-    await transporter.sendMail({
-      from: `"Linkize" <${fromEmail}>`,
-      to: email,
-      subject: '🎉 Obrigado por participar da pesquisa Linkize!',
-      text: textContent,
-      html: htmlContent
-    })
+    // Configure sender and recipient
+    const sentFrom = new Sender(fromEmail, fromName)
+    const recipients = [new Recipient(email, name)]
 
-    console.log(`Email sent successfully to ${email}`)
+    // Create email parameters
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setReplyTo(sentFrom)
+      .setSubject('🎉 Obrigado por participar da pesquisa Linkize!')
+      .setHtml(htmlContent)
+      .setText(textContent)
+
+    // Send email
+    const response = await mailerSend.email.send(emailParams)
+
+    console.log(`Email sent successfully to ${email}`, response)
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({ 
         success: true, 
-        message: 'Email sent successfully' 
+        message: 'Email sent successfully',
+        messageId: response.messageId
       })
     }
 

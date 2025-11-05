@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "nodemailer": "^7.0.10",
+    "mailersend": "^2.6.0",
     "twilio": "^5.0.0",
     "vue": "^3.4.21"
   },

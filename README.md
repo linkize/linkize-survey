@@ -7,7 +7,7 @@ Pesquisa interativa para coletar feedback sobre a ferramenta Linkize, com integr
 - ✅ Formulário responsivo com 21 perguntas
 - ✅ Salvamento automático no Supabase
 - ✅ Envio de WhatsApp via Twilio (Netlify Functions)
-- ✅ Envio de Email via SMTP (Netlify Functions)  
+- ✅ Envio de Email via MailerSend (Netlify Functions)  
 - ✅ Conformidade com LGPD
 - ✅ Interface em português
 - ✅ Design moderno com Tailwind CSS
@@ -59,13 +59,11 @@ TWILIO_AUTH_TOKEN=your_auth_token
 TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
 ```
 
-**Para Email (SMTP):**
+**Para Email (MailerSend):**
 ```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-FROM_EMAIL=your-email@gmail.com
+MAILERSEND_API_KEY=your_mailersend_api_key
+MAIL_FROM=noreply@yourdomain.com
+MAIL_FROM_NAME=Your Company Name
 ```
 
 **Supabase:**
@@ -109,7 +107,7 @@ npm run build
 3. Se `quer_ser_avisado === "Sim, quero participar"`:
    - Detecta se o contato é email ou telefone
    - Envia WhatsApp (se telefone) via Twilio
-   - Envia Email (se email) via SMTP
+   - Envia Email (se email) via MailerSend
 4. Exibe confirmação de sucesso
 
 ## 🔒 LGPD Compliance
