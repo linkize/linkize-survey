@@ -36,13 +36,6 @@ jobs:
     - name: Generate coverage report
       run: npm run test:coverage
     
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        directory: ./coverage
-        flags: unittests
-        name: codecov-umbrella
-    
     - name: Build application
       run: npm run build
     
