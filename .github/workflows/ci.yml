@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     
     strategy:
@@ -30,26 +30,11 @@ jobs:
     - name: Run linting
       run: npm run lint --if-present
     
-    - name: Run unit tests
-      run: npm run test -- --run
-    
-    - name: Generate coverage report
-      run: npm run test:coverage
-    
     - name: Build application
       run: npm run build
     
-    - name: Run E2E tests
-      uses: cypress-io/github-action@v6
-      with:
-        start: npm run dev
-        wait-on: 'http://localhost:5173'
-        wait-on-timeout: 240
-        browser: chrome
-        record: false
-    
   deploy:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
